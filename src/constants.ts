@@ -1,9 +1,9 @@
 import { WeeklyData, Member } from './types';
 
 export const MEMBERS: Member[] = [
-  { id: 'po1', name: 'Quynh PO', avatar: '👩‍💻', color: 'bg-pink-500' },
-  { id: 'po2', name: 'Lam PO', avatar: '👨‍💻', color: 'bg-blue-500' },
-  { id: 'po3', name: 'An PO', avatar: '🦸', color: 'bg-amber-500' },
+  { id: 'po1', name: 'Quynh PO', email: 'po1', password: 'password', avatar: '👩‍💻', color: 'bg-pink-500' },
+  { id: 'po2', name: 'Lam PO', email: 'po2', password: 'password', avatar: '👨‍💻', color: 'bg-blue-500' },
+  { id: 'po3', name: 'An PO', email: 'po3', password: 'password', avatar: '🦸', color: 'bg-amber-500' },
 ];
 
 export const INITIAL_DATA: WeeklyData = {

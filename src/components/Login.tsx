@@ -51,7 +51,7 @@ export default function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin or po1"
+                  placeholder="Username / Email"
                   className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 dark:text-white font-medium"
                 />
               </div>
@@ -103,21 +103,6 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
-            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4">
-              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">
-                Sample Accounts
-              </h4>
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs font-bold">
-                  <span className="text-emerald-600 dark:text-emerald-500">Leader: admin / admin123</span>
-                </div>
-                <div className="flex justify-between text-xs font-bold">
-                  <span className="text-amber-600 dark:text-amber-500">Member: po1 / 123456</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </motion.div>
     </div>

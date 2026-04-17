@@ -25,7 +25,11 @@ import {
   User as UserIcon,
   Users,
   Target,
-  LogOut
+  LogOut,
+  Eye,
+  EyeOff,
+  Save,
+  ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -209,13 +213,13 @@ export default function App() {
     }, 100);
   };
 
-  const addMember = (name: string) => {
+  const addMember = (name: string, email: string, password?: string) => {
     const newId = `po-${Date.now()}`;
     const newMember: User = {
       id: newId,
       name,
-      email: name.toLowerCase().replace(/\s+/g, ''),
-      password: '123456',
+      email: email || name.toLowerCase().replace(/\s+/g, ''),
+      password: password || '123456',
       role: 'Member',
       avatar: '👨‍💼',
       color: 'bg-indigo-500'
@@ -229,20 +233,32 @@ export default function App() {
     setMembers(prev => [...prev, {
       id: newMember.id,
       name: newMember.name,
+      email: newMember.email,
+      password: newMember.password,
       avatar: newMember.avatar,
       color: newMember.color
     }]);
     setSelectedPoId(newMember.id);
   };
 
-  const updateMember = (id: string, name: string) => {
-    setMembers(prev => prev.map(m => m.id === id ? { ...m, name } : m));
+  const updateMember = (id: string, name: string, email?: string, password?: string) => {
+    setMembers(prev => prev.map(m => m.id === id ? { 
+      ...m, 
+      name, 
+      ...(email ? { email } : {}), 
+      ...(password ? { password } : {}) 
+    } : m));
     
     const savedUsers = localStorage.getItem('po_planner_all_users');
     if (savedUsers) {
       const allUsers = JSON.parse(savedUsers);
       localStorage.setItem('po_planner_all_users', JSON.stringify(
-        allUsers.map((u: User) => u.id === id ? { ...u, name } : u)
+        allUsers.map((u: User) => u.id === id ? { 
+          ...u, 
+          name, 
+          ...(email ? { email } : {}), 
+          ...(password ? { password } : {}) 
+        } : u)
       ));
     }
   };
@@ -1094,6 +1110,130 @@ function GoalItem({
   );
 }
 
+function POAccountRow({ 
+  member, 
+  onUpdate, 
+  onRemove, 
+  isExpanded, 
+  onToggleExpand 
+}: { 
+  member: Member; 
+  onUpdate: (id: string, name: string, email?: string, password?: string) => void;
+  onRemove: (id: string) => void;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  key?: string | number;
+}) {
+  const [editName, setEditName] = useState(member.name);
+  const [editPassword, setEditPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  const handleSave = () => {
+    onUpdate(member.id, editName, member.email, editPassword || undefined);
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
+  };
+
+  return (
+    <div className="bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden transition-all shadow-sm">
+      <div className="flex items-center gap-3 p-3 group">
+        <div className={`w-10 h-10 rounded-xl ${member.color} flex items-center justify-center text-white text-lg shadow-sm shrink-0`}>
+          {member.avatar}
+        </div>
+        <div className="flex-1 min-w-0" onClick={onToggleExpand}>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-slate-800 dark:text-white cursor-pointer hover:text-accent-blue transition-colors">
+              {member.name}
+            </span>
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md uppercase tracking-tight">
+              {member.email}
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={onToggleExpand}
+            className={`p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-400 ${isExpanded ? 'rotate-180 text-accent-blue bg-accent-blue/5' : ''}`}
+          >
+            <ChevronDown size={18} />
+          </button>
+          <button 
+            onClick={() => onRemove(member.id)}
+            className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 transition-all text-slate-400"
+            title="Remove Account"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="px-4 pb-4 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-50 dark:border-slate-800 pt-4"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 items-end">
+              <div className="space-y-1.5 lg:col-span-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Display Name</label>
+                <input 
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent-blue/20 dark:text-slate-100"
+                />
+              </div>
+              <div className="space-y-1.5 lg:col-span-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Username (No Change)</label>
+                <input 
+                  type="text"
+                  value={member.email}
+                  disabled
+                  className="w-full px-3 py-2 bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none opacity-60 cursor-not-allowed dark:text-slate-400"
+                />
+              </div>
+              <div className="space-y-1.5 lg:col-span-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">Update Password</label>
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"}
+                    placeholder="New Password"
+                    value={editPassword}
+                    onChange={(e) => setEditPassword(e.target.value)}
+                    className="w-full px-3 py-2 pr-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent-blue/20 dark:text-slate-100"
+                  />
+                  <button 
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+              <div className="lg:col-span-1">
+                <button 
+                  onClick={handleSave}
+                  className={`w-full py-2 rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all ${
+                    isSaved 
+                    ? 'bg-green-500 text-white' 
+                    : 'bg-accent-blue text-white hover:bg-blue-600 shadow-lg shadow-blue-500/20'
+                  }`}
+                >
+                  {isSaved ? <ShieldCheck size={16} /> : <Save size={16} />}
+                  {isSaved ? 'Done' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 function POManager({ 
   members, 
   onAdd, 
@@ -1103,13 +1243,26 @@ function POManager({
   darkMode 
 }: { 
   members: Member[]; 
-  onAdd: (name: string) => void;
-  onUpdate: (id: string, name: string) => void;
+  onAdd: (name: string, email: string, password?: string) => void;
+  onUpdate: (id: string, name: string, email?: string, password?: string) => void;
   onRemove: (id: string) => void;
   onClose: () => void;
   darkMode: boolean;
 }) {
   const [newName, setNewName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const handleAdd = () => {
+    if (newName.trim() && newEmail.trim()) {
+      onAdd(newName, newEmail, newPassword || '123456');
+      setNewName('');
+      setNewEmail('');
+      setNewPassword('');
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm px-6">
@@ -1117,62 +1270,93 @@ function POManager({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800"
+        className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800"
       >
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <h3 className="text-lg font-bold text-slate-800 dark:text-white">Product Owner Setup</h3>
+          <div className="flex items-center gap-3">
+            <Users className="text-accent-blue" size={24} />
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white">PO Account Management</h3>
+          </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400">
-            <Plus size={20} className="rotate-45" />
+            <Plus size={24} className="rotate-45" />
           </button>
         </div>
         
-        <div className="p-6 flex flex-col gap-4">
-          <div className="flex gap-2">
-            <input 
-              type="text"
-              placeholder="Full Name (e.g. Quynh PO)"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              className="flex-1 px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent-blue transition-all dark:text-white"
-            />
-            <button 
-              onClick={() => { if (newName.trim()) { onAdd(newName); setNewName(''); } }}
-              className="px-4 py-2 bg-accent-blue text-white rounded-xl font-bold text-sm hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20"
-            >
-              Add
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-2 mt-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-            {members.map(m => (
-              <div key={m.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl group border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all">
-                <div className={`w-8 h-8 rounded-lg ${m.color} flex items-center justify-center text-white text-xs shadow-sm`}>
-                  {m.avatar}
-                </div>
+        <div className="p-6 flex flex-col gap-6">
+          <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/50">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4 ml-1">
+              Create New Account
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1.5">
                 <input 
                   type="text"
-                  value={m.name}
-                  onChange={(e) => onUpdate(m.id, e.target.value)}
-                  className="flex-1 bg-transparent border-none text-sm font-semibold outline-none focus:text-accent-blue dark:text-slate-200"
+                  placeholder="Full Name"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent-blue/20 transition-all dark:text-white"
                 />
+              </div>
+              <div className="space-y-1.5">
+                <input 
+                  type="text"
+                  placeholder="Username / Email"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent-blue/20 transition-all dark:text-white"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="relative flex-1">
+                  <input 
+                    type={showNewPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-accent-blue/20 transition-all dark:text-white pr-10"
+                  />
+                  <button 
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
                 <button 
-                  onClick={() => onRemove(m.id)}
-                  className="p-2 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all text-slate-400"
-                  title="Remove PO"
+                  onClick={handleAdd}
+                  disabled={!newName.trim() || !newEmail.trim()}
+                  className="w-full py-2.5 bg-accent-blue text-white rounded-xl font-bold text-sm hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  <Trash2 size={16} />
+                  <Save size={18} />
+                  Save Account
                 </button>
               </div>
+            </div>
+          </div>
+
+          <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1 mb-2">
+              Existing Accounts ({members.length})
+            </h4>
+            {members.map(m => (
+              <POAccountRow 
+                key={m.id}
+                member={m}
+                onUpdate={onUpdate}
+                onRemove={onRemove}
+                isExpanded={expandedId === m.id}
+                onToggleExpand={() => setExpandedId(expandedId === m.id ? null : m.id)}
+              />
             ))}
           </div>
         </div>
 
-        <div className="p-4 bg-slate-50 dark:bg-slate-800/30 flex justify-end">
+        <div className="p-4 bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
           <button 
             onClick={onClose}
-            className="px-6 py-2 bg-slate-800 dark:bg-slate-700 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-opacity"
+            className="px-6 py-2.5 bg-slate-800 dark:bg-slate-700 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-opacity"
           >
-            Done
+            Finished Setup
           </button>
         </div>
       </motion.div>
